@@ -46,7 +46,22 @@ class User {
 
   /** Update last_login_at for user */
 
-  static async updateLoginTimestamp(username) {}
+  static async updateLoginTimestamp(username) {
+    const currentTime = new Date();
+    const result = await db.query(
+      `UPDATE users
+      SET last_login_at = $1
+      WHERE username = $2
+      RETURNING username, last_login_at; 
+      `,
+      [currentTime, username]
+    );
+    const user = result.rows[0];
+
+    if (!user) throw new NotFoundError(`No such user: ${username}`);
+
+    return user;
+  }
 
   /** All: basic info on all users:
    * [{username, first_name, last_name}, ...] */
@@ -87,7 +102,6 @@ class User {
   /** Return messages from this user.
    *
    * [{id, to_user:{username, first_name, last_name, phone}, body, sent_at, read_at}]
-   * 
    *
    * where to_user is
    *   {username, first_name, last_name, phone}
@@ -95,20 +109,34 @@ class User {
 
   static async messagesFrom(username) {
     const result = await db.query(
-      `SELECT m.id, m.to_username as to_user, m.body, m.sent_at, m.read_at
-      FROM messages m
-      JOIN users u ON m.from_username = u.username
-      WHERE m.from_username = $1`,
+      `SELECT m.id,
+                  m.to_username,
+                  t.first_name AS to_first_name,
+                  t.last_name AS to_last_name,
+                  t.phone AS to_phone,
+                  m.body,
+                  m.sent_at,
+                  m.read_at
+             FROM messages AS m
+                    JOIN users AS t ON m.to_username = t.username
+                    WHERE m.from_username = $1`,
       [username]
     );
 
-    const messages = result.rows.map((u) => u.to_user = User.get(u.to_username));
-    const messages = result.rows.map((m) => {id: m.id, to_user:{username: m.to_username, first_name, last_name, phone}, body, sent_at, read_at});
+    const messages = result.rows.map((m) => ({
+      id: m.id,
+      to_user: {
+        username: m.to_username,
+        first_name: m.to_first_name,
+        last_name: m.to_last_name,
+        phone: m.to_phone,
+      },
+      body: m.body,
+      sent_at: m.sent_at,
+      read_at: m.read_at,
+    }));
 
-
-    // messages.map((m) => (m.to_user = to_user));
-
-    //TODO:
+    return messages;
   }
 
   /** Return messages to this user.
@@ -121,18 +149,33 @@ class User {
 
   static async messagesTo(username) {
     const result = await db.query(
-      `SELECT m.id, m.from_username as from_user, m.body, m.sent_at, m.read_at
-      FROM messages m
-      JOIN users u ON m.to_username = u.username
-      WHERE m.to_username = $1`,
+      `SELECT m.id,
+                  m.from_username,
+                  f.first_name AS from_first_name,
+                  f.last_name AS from_last_name,
+                  f.phone AS from_phone,
+                  m.body,
+                  m.sent_at,
+                  m.read_at
+             FROM messages AS m
+                    JOIN users AS f ON m.from_username = f.username
+             WHERE m.to_username = $1`,
       [username]
     );
 
-    const from_user = result.rows.map((u) => User.get(u.from_username));
-
-    const messages = result.rows;
-
-    messages.map((m) => (m.from_user = from_user));
+    const messages = result.rows.map((m) => ({
+      id: m.id,
+      from_user: {
+        username: m.from_username,
+        first_name: m.from_first_name,
+        last_name: m.from_last_name,
+        phone: m.from_phone,
+      },
+      body: m.body,
+      sent_at: m.sent_at,
+      read_at: m.read_at,
+    }));
+    return messages;
   }
 }
 
