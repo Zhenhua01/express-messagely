@@ -4,7 +4,7 @@
 
 const db = require("../db");
 const bcrypt = require("bcrypt");
-const BCRYPT_WORK_FACTOR = require("../config.js");
+const { BCRYPT_WORK_FACTOR } = require("../config.js");
 
 const { UnauthorizedError } = require("../expressError");
 
@@ -17,8 +17,8 @@ class User {
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
 
     const result = await db.query(
-      `INSERT INTO users (username, password, first_name, last_name, phone)
-           VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO users (username, password, first_name, last_name, phone, join_at)
+           VALUES ($1, $2, $3, $4, $5, current_timestamp)
            RETURNING username, password, first_name, last_name, phone`,
       [username, hashedPassword, first_name, last_name, phone]
     );
@@ -47,14 +47,13 @@ class User {
   /** Update last_login_at for user */
 
   static async updateLoginTimestamp(username) {
-    const currentTime = new Date();
     const result = await db.query(
       `UPDATE users
-      SET last_login_at = $1
-      WHERE username = $2
-      RETURNING username, last_login_at; 
+      SET last_login_at = current_timestamp
+      WHERE username = $1
+      RETURNING username; 
       `,
-      [currentTime, username]
+      [username]
     );
     const user = result.rows[0];
 
