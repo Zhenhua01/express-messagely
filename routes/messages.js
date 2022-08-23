@@ -32,7 +32,6 @@ router.get("/:id", ensureLoggedIn, async function (req, res, next) {
   }
 });
 
-
 /** POST / - post message.
  *
  * {to_username, body} =>
@@ -47,7 +46,6 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
 
   return res.json({ message });
 });
-
 
 /** POST/:id/read - mark message as read:
  *
@@ -68,6 +66,5 @@ router.post("/:id/read", ensureLoggedIn, async function (req, res, next) {
     throw new UnauthorizedError();
   }
 });
-
 
 module.exports = router;
