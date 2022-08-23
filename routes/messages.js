@@ -43,6 +43,7 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
   const from_username = res.locals.user.username;
 
   const message = await Message.create({ from_username, to_username, body });
+  await Message.sendSMS(body);
 
   return res.json({ message });
 });

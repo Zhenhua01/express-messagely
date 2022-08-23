@@ -4,7 +4,7 @@
 
 const { NotFoundError } = require("../expressError");
 const db = require("../db");
-const { accountSid, authToken } = require("../config");
+const { accountSid, authToken, TWILIO_PHONE, MY_PHONE } = require("../config");
 const client = require("twilio")(accountSid, authToken);
 
 /** Message on the site. */
@@ -25,12 +25,16 @@ class Message {
              RETURNING id, from_username, to_username, body, sent_at`,
       [from_username, to_username, body]
     );
-
-    client.messages
-      .create({ body: "Hi there", from: "+18456979603", to: "+14084302472" })
-      .then((message) => console.log(message.sid));
-
+    
     return result.rows[0];
+  }
+
+  // Can get message ID from route, get message details, then pass in
+  // from/to phone numbers and/or usernames, and message body
+  static async sendSMS(body){
+    client.messages
+      .create({ body: body, from: TWILIO_PHONE, to: MY_PHONE })
+      .then((message) => console.log(message.sid));
   }
 
   /** Update read_at for message
