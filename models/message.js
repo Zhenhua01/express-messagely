@@ -25,16 +25,17 @@ class Message {
              RETURNING id, from_username, to_username, body, sent_at`,
       [from_username, to_username, body]
     );
-    
+
     return result.rows[0];
   }
 
   // Can get message ID from route, get message details, then pass in
-  // from/to phone numbers and/or usernames, and message body
+  // from/to phone numbers and/or usernames, and message body from DB
   static async sendSMS(body){
-    client.messages
-      .create({ body: body, from: TWILIO_PHONE, to: MY_PHONE })
-      .then((message) => console.log(message.sid));
+    const message = await client.messages
+      .create({ body: body, from: TWILIO_PHONE, to: MY_PHONE });
+
+    // optional return message to use later
   }
 
   /** Update read_at for message
