@@ -2,6 +2,7 @@
 
 const Router = require("express").Router;
 const router = new Router();
+
 const Message = require("../models/message");
 const { UnauthorizedError } = require("../expressError");
 const { ensureLoggedIn } = require("../middleware/auth");
@@ -22,11 +23,10 @@ router.get("/:id", ensureLoggedIn, async function (req, res, next) {
   const username = res.locals.user.username;
   const message = await Message.get(req.params.id);
 
-  if (
-    username === message.from_user.username ||
-    username === message.to_user.username
-  ) {
+  if (username === message.from_user.username ||
+      username === message.to_user.username) {
     return res.json({ message });
+
   } else {
     throw new UnauthorizedError();
   }
@@ -56,13 +56,13 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
  *
  **/
 router.post("/:id/read", ensureLoggedIn, async function (req, res, next) {
-  const id = req.params.id;
   const username = res.locals.user.username;
-  const message = await Message.get(id);
+  const message = await Message.get(req.params.id);
 
   if (username === message.to_user.username) {
-    const msg = await Message.markRead(id);
-    return res.json({ msg });
+    const message = await Message.markRead(req.params.id);
+    return res.json({ message });
+
   } else {
     throw new UnauthorizedError();
   }

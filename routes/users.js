@@ -2,8 +2,8 @@
 
 const Router = require("express").Router;
 const router = new Router();
-const User = require("../models/user");
 
+const User = require("../models/user");
 const { ensureLoggedIn, ensureCorrectUser } = require("../middleware/auth");
 
 /** GET / - get list of users.
@@ -52,13 +52,11 @@ router.get("/:username/to", ensureCorrectUser, async function (req, res, next) {
  *                 to_user: {username, first_name, last_name, phone}}, ...]}
  *
  **/
-router.get(
-  "/:username/from",
-  ensureCorrectUser,
-  async function (req, res, next) {
-    const messages = await User.messagesFrom(req.params.username);
-    return res.json({ messages });
-  }
+router.get("/:username/from", ensureCorrectUser, async function (req, res, next) {
+  const messages = await User.messagesFrom(req.params.username);
+
+  return res.json({ messages });
+}
 );
 
 module.exports = router;
